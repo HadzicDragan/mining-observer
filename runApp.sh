@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source env_vars.sh
+application_name=Observer.jar
 
 delete_data_directories() {
 	echo "Deleting data/error directory"
