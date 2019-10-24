@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <Properties>
+        <property name="appRoot">${sys:user.dir}</property>
+        <property name="logs">${appRoot}/logs</property>
+        <property name="logName">temperature</property>
+        <property name="logPattern">%d{yyyy-MM-dd HH:mm:ss}{UTC} %-5level - %msg%n</property> <!-- %logger{36} --> 
+        <property name="monthPattern">%d{dd-MM-yyyy}</property>
+        <property name="rolloverDelete">60d</property>
+    </Properties>
+    <Appenders>
+        <RollingFile append="true" name="INFO-Level" fileName="${logs}/info/${logName}.log" filePattern="${logs}/info/${monthPattern}-${logName}-%i.log">
+            <PatternLayout pattern="${logPattern}"/> 
+            <Policies>
+                <TimeBasedTriggeringPolicy />
+            </Policies>
+            <DefaultRolloverStrategy max="100">
+                <Delete basePath="${logs}/info" maxDepth="1">
+                    <IfFileName glob="*/*-${name}*.log">
+                        <IfLastModified age="${rolloverDelete}"/>
+                    </IfFileName>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+        <RollingFile append="true" name="ERROR-Level" fileName="${logs}/global/global.log" filePattern="${logs}/global/${monthPattern}-global-%i.log">
+            <PatternLayout pattern="${logPattern}"/> 
+            <Policies>
+                <TimeBasedTriggeringPolicy />
+            </Policies>
+            <DefaultRolloverStrategy max="100">
+                <Delete basePath="${logs}/global" maxDepth="1">
+                    <IfFileName glob="*/*-global*.log">
+                        <IfLastModified age="${rolloverDelete}"/>
+                    </IfFileName>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+    </Appenders>
+    <Loggers>
+        <Root level="ERROR" additivity="false">
+            <AppenderRef ref="ERROR-Level"/>
+        </Root>
+
+        <Logger name="com.ad.miningobserver.InfoLevelLogger" level="INFO" additivity="false">
+            <AppenderRef ref="INFO-Level" level="INFO"/>
+        </Logger>
+    </Loggers>
+</Configuration>
