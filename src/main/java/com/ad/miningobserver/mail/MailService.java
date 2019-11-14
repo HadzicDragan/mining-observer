@@ -5,6 +5,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+
+// import org.apache.velocity.Template;
+// import org.apache.velocity.VelocityContext;
+// import org.apache.velocity.app.VelocityEngine;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -18,6 +22,9 @@ public class MailService {
     
     @Autowired
     private JavaMailSender javaMailSender;
+
+    // @Autowired
+    // private VelocityEngine velEngine;
     
     public void sendMail() {
         MimeMessage mimeMessage = this.javaMailSender.createMimeMessage();
@@ -34,6 +41,13 @@ public class MailService {
         } catch (MessagingException ex) {
             Logger.getLogger(MailService.class.getName()).log(Level.SEVERE, null, ex);
         }
+
+        // Template template = velEngine.getTemplate("criticalTemp.vm");
+
+        // VelocityEngineUtils.
+
+        // VelocityContext velContext = new VelocityContext();
+        // velContext.
         
         System.out.println(text);
 //        javaMailSender.send(mimeMessage);

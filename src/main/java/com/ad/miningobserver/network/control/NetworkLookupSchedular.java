@@ -17,12 +17,8 @@ import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 @EnableScheduling
 public class NetworkLookupSchedular implements SchedulingConfigurer {
     
-    /**
-     * #TODO should be changed maybe to 5min
-     * Every 2 minutes run the lookup job
-     */
-    private static final String SCHEDULE_EVERY_DAY_MIDNIGHT = "0 */1 * ? * *";
-//    private static final String SCHEDULE_EVERY_DAY_MIDNIGHT = "0 */2 * ? * *";
+    /** Cron job on 3 minutes */
+    private static final String ON_TIME_LOOKUP = "0 */3 * * * *";
 
     @Autowired
     private NetworkLookupTask networkLookup;
@@ -34,7 +30,7 @@ public class NetworkLookupSchedular implements SchedulingConfigurer {
 
     @Override
     public void configureTasks(ScheduledTaskRegistrar registrar) {
-        registrar.addCronTask(this.networkLookup, SCHEDULE_EVERY_DAY_MIDNIGHT);
+        registrar.addCronTask(this.networkLookup, ON_TIME_LOOKUP);
         registrar.setScheduler(this.networkLookupThreadPoolSchedular());
     }
 }

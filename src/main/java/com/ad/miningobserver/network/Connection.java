@@ -6,7 +6,6 @@ package com.ad.miningobserver.network;
 public interface Connection {
     
     /**
-     * #TODO add documentation
      * 
      * @return {@code boolean} true if connected, else false
      */

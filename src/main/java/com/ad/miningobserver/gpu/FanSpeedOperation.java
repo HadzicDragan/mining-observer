@@ -2,29 +2,20 @@ package com.ad.miningobserver.gpu;
 
 import com.ad.miningobserver.SpringContextLookup;
 import com.ad.miningobserver.gpu.boundary.GpuService;
-import com.ad.miningobserver.gpu.control.TemperatureController.FanOptions;
 import com.ad.miningobserver.operation.Operation;
 
-public class FanSpeedOperation extends Operation {
+public final class FanSpeedOperation extends Operation {
     
-    private final FanOptions fanOptions;
-    private final String gpuUUID;
+    private final String fileUUID;
     
-    public FanSpeedOperation(OrderCode code, final FanOptions options, final String gpuUUID) {
+    public FanSpeedOperation(OrderCode code, final String fileUUID) {
         super(code);
-        this.fanOptions = options;
-        this.gpuUUID = gpuUUID;
+        this.fileUUID = fileUUID;
     }
     
     @Override
     public void run() {
-        if (this.isFanSpeedCritical()) {
-            this.getGpuService().notifyCriticalTemperature(this.gpuUUID);
-        }
-    }
-    
-    private boolean isFanSpeedCritical() {
-        return this.fanOptions.equals(FanOptions.CRITICAL);
+        this.getGpuService().publishCriticalTemperature(this.fileUUID);
     }
     
     private GpuService getGpuService() {

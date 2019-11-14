@@ -8,7 +8,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import com.ad.miningobserver.SpringContextLookup;
-import com.ad.miningobserver.operation.ExceptionOperationHandler;
+import com.ad.miningobserver.exception.ExceptionOperationHandler;
 import com.ad.miningobserver.util.ApplicationLogger;
 import com.ad.miningobserver.util.StringUtils;
 
@@ -87,7 +87,7 @@ public class Creator {
      * @param uuid name of the file, without the extension
      * @return {@code boolean} true if the file is deleted, else false
      */
-    public static boolean removeGPUFileById(final String uuid) {
+    public static boolean removeGpuListFile(final String uuid) {
         final Finder fileFinder = Creator.getFinder();
         return Creator.isFileRemoved(fileFinder.getGpuListDirectory(), uuid);
     }

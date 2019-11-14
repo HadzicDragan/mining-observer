@@ -10,6 +10,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class ActuatorClient extends AbstractClient {
     
+    /**
+     * Check the remote server is available.
+     * 
+     * @return {@code boolean} true if the remote server is available, else false.
+     */
     public boolean isServerActive() {
         final String healthEndpoint = new ActuatorPath(this.containerPath)
                 .buildHealthEndpoint();

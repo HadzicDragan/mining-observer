@@ -1,7 +1,7 @@
 package com.ad.miningobserver.network.control;
 
+import com.ad.miningobserver.client.monitoring.boundary.ActuatorClient;
 import com.ad.miningobserver.network.NetworkConnection;
-import com.ad.miningobserver.network.boundary.NetworkService;
 import com.ad.miningobserver.util.ApplicationLogger;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +21,7 @@ public class NetworkLookupTask implements Runnable {
     private LocalNetwork localNetwork;
     
     @Autowired
-    private NetworkService service;
+    private ActuatorClient client;
     
     @Autowired
     private ApplicationEventPublisher eventPublisher;
@@ -34,7 +34,7 @@ public class NetworkLookupTask implements Runnable {
     @Override
     public void run() {
         if (this.localNetwork.isOutgoingNetworkUp()) {
-            if (this.service.isActiveServer()) {
+            if (this.client.isServerActive()) {
                 this.publishEvent(true);
                 return;
             } else {
@@ -47,9 +47,8 @@ public class NetworkLookupTask implements Runnable {
         }
         
         if (this.localNetwork.isReconnectNetworkSuccessful()) {
-            if (this.service.isActiveServer()) {
+            if (this.client.isServerActive()) {
                 this.publishEvent(true);
-                this.service.publishNetworkErrors();
             }
         } else {
             ApplicationLogger.infoLogger().info(CLASSNAME + ". Unable to reach server.");

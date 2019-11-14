@@ -6,8 +6,6 @@ import com.ad.miningobserver.client.AbstractClient;
 import com.ad.miningobserver.network.control.NetworkPath;
 import com.ad.miningobserver.network.entity.NetworkError;
 
-import org.springframework.http.HttpEntity;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 /**
@@ -17,22 +15,30 @@ import org.springframework.stereotype.Component;
 public class NetworkClient extends AbstractClient {
 
     /**
-     * POST network errors to the remote server.
+     * #TODO change the {@link NetworkPath} method
+     * Post network error to remote server.
+     * 
+     * @return {@code boolean} true if POST request was successful, else false
+     */
+    public boolean postNetworkError(NetworkError networkError) {
+        // #TODO add implementation on the remote server.
+        return false;
+        /*
+        final String endpoint = new NetworkPath(super.containerPath)
+                .buildNetworkErrorEndpoint("single");
+        return super.postToEndpoint(endpoint, networkError);
+        */
+    }
+
+    /**
+     * POST network errors to remote server.
      * 
      * @param networkErrors 
      * @return {@code boolean} true if POST request was successful, else false
      */
     public boolean postNetworkErrors(final List<NetworkError> networkErrors) {
-        if (!super.isRestEnabled) {
-            return false;
-        }
-        if (super.notAvailableServer()) {
-            return false;
-        }
         final String endpoint = new NetworkPath(super.containerPath)
                 .buildNetworksEndpoint();
-        final ResponseEntity<Object> response = super.postObjectToUrl(
-                endpoint, new HttpEntity<>(networkErrors));
-        return super.isOkResponseStatus(response);
+        return super.postToEndpoint(endpoint, networkErrors);
     }
 }

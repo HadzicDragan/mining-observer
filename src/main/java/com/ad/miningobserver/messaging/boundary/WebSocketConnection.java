@@ -11,11 +11,11 @@ import javax.annotation.PostConstruct;
 
 import com.ad.miningobserver.EventDesignator;
 import com.ad.miningobserver.NameReference;
-import com.ad.miningobserver.messaging.control.EntryHolder;
-import com.ad.miningobserver.messaging.control.WebSocketEndpointBuilder;
+import com.ad.miningobserver.PathLocation;
 import com.ad.miningobserver.network.Connection;
 import com.ad.miningobserver.network.control.LocalNetwork;
-import com.ad.miningobserver.operation.ExceptionOperationHandler;
+import com.ad.miningobserver.exception.ExceptionOperationHandler;
+import com.ad.miningobserver.util.EntryHolder;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,20 +35,23 @@ import org.springframework.stereotype.Component;
 public class WebSocketConnection implements EventDesignator<Connection> {
     
     private final WebSocketMessageListener wsMessageListener;
-    private final WebSocketEndpointBuilder endpointBuilder;
     private final LocalNetwork localNetwork;
     private WebSocket webSocket;
 
-    @Value(value = "${rest.connector.enabled}")
+    @Value(value = "${container.ip.address}")
+    private String containerIPAddress;
+    @Value(value = "${websocket.connector.protocol}")
+    private String wsProtocol;
+    @Value(value = "${websocket.connector.port}")
+    private String portNumber;
+    @Value(value = "${websocket.connector.enabled}")
     private boolean websocketEnabled;
     
+    private String wsEndpointURL;
+    
     @Autowired
-    public WebSocketConnection(
-            WebSocketMessageListener wsListener, 
-            WebSocketEndpointBuilder endpointBuilder, 
-            LocalNetwork network) {
+    public WebSocketConnection(WebSocketMessageListener wsListener, LocalNetwork network) {
         this.wsMessageListener = wsListener;
-        this.endpointBuilder = endpointBuilder;
         this.localNetwork = network;
     }
     
@@ -60,6 +63,8 @@ public class WebSocketConnection implements EventDesignator<Connection> {
         if (!this.websocketEnabled) {
             return;
         }
+
+        this.wsEndpointURL = this.buildEndpoint();
         this.checkNetworkConnectionAndConnectToServer();
     }
     
@@ -131,7 +136,6 @@ public class WebSocketConnection implements EventDesignator<Connection> {
 
     /**
      * Establish a websocket connection with the host name and valid worker name.
-     * #TODO should get worker from some other method
      * 
      * @throws URISyntaxException
      */
@@ -142,30 +146,41 @@ public class WebSocketConnection implements EventDesignator<Connection> {
                 this.getClass(), "connectToEndpoint", "Unable to get canonicalHostName");
             return;
         }
-        final EntryHolder<String, String> entryHolder = 
-                new EntryHolder<>("worker", canonicalHostName);
-        this.connect(entryHolder, ChronoUnit.SECONDS.getDuration());
+        final EntryHolder<String, String> entry = new EntryHolder<>("worker", canonicalHostName);
+        this.connect(entry, ChronoUnit.SECONDS.getDuration());
     }
     
     /**
      * Connect to the remote websocket server.
      * 
-     * @param entryHolder
+     * @param entry
      * @param connectionTimeout
      * @throws URISyntaxException
      */
-    private void connect(EntryHolder<String, String> entryHolder, 
-            Duration connectionTimeout) throws URISyntaxException {
+    private void connect(EntryHolder<String, String> entry, Duration connectionTimeout) 
+        throws URISyntaxException {
         if (this.webSocket != null) {
             return;
         }
         
         final HttpClient httpClient = HttpClient.newHttpClient();
         this.webSocket = httpClient.newWebSocketBuilder()
-                .header(entryHolder.getFirst(), entryHolder.getSecond())
+                .header(entry.getFirst(), entry.getSecond())
                 .connectTimeout(connectionTimeout)
-                .buildAsync(new URI(this.endpointBuilder.buildEndpoint()), this.wsMessageListener)
+                .buildAsync(new URI(this.wsEndpointURL), this.wsMessageListener)
                 .join();
+    }
+
+    private String buildEndpoint() {
+        StringBuilder builder = new StringBuilder();
+        return builder.append(wsProtocol)
+                .append("://")
+                .append(this.containerIPAddress)
+                .append(":")
+                .append(portNumber)
+                .append(PathLocation.CONTAINER)
+                .append(PathLocation.WEBSOCKET_ENDPOINT)
+                .toString();
     }
     
     /**

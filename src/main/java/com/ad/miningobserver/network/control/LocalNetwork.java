@@ -14,15 +14,12 @@ import javax.annotation.PostConstruct;
 
 import com.ad.miningobserver.network.UnreachableNetworkOperation;
 import com.ad.miningobserver.operation.Operation.OrderCode;
-import com.ad.miningobserver.operation.boundary.OperationRegister;
+import com.ad.miningobserver.operation.OperationRegister;
 import com.ad.miningobserver.util.ApplicationLogger;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-/**
- * #TODO describe class and methods
- */
 @Component
 public final class LocalNetwork {
     

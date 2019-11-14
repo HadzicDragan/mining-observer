@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -34,7 +35,6 @@ public class TaskExecutorFakeImpl {
         
         final String command = commandArgs[0];
         if (SMICommand.GPU_SMI_COMMAND_STRING.equals(command)) {
-            // on ScheduledGPUQuery.run()
             this.commandLine.commandLineOutput(this.getGPUInputStream());
             this.internalCounter.incrementAndGet();
         }

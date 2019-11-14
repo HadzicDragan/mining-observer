@@ -15,10 +15,10 @@ public final class GpuErrorOperation extends Operation {
     
     @Override
     public void run() {
-        this.getService().gpuErrorOperationActions(fileUUID);
+        this.getGpuService().publishGpuError(fileUUID);
     }
     
-    private GpuService getService() {
+    private GpuService getGpuService() {
         return SpringContextLookup.getBean(GpuService.class);
     }
 }

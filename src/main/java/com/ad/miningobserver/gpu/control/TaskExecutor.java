@@ -2,7 +2,7 @@ package com.ad.miningobserver.gpu.control;
 
 import java.io.IOException;
 
-import com.ad.miningobserver.operation.ExceptionOperationHandler;
+import com.ad.miningobserver.exception.ExceptionOperationHandler;
 import com.ad.miningobserver.util.RunCLITask;
 import com.ad.miningobserver.util.RunCLITask.ProcessResult;
 

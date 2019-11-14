@@ -21,4 +21,8 @@ public class NetworkPath extends ClientPath {
     public String buildNetworksEndpoint() {
         return super.pathBuilder(NETWORK_ERROR);
     }
+
+    public String buildNetworkErrorEndpoint(final String error) {
+        return super.pathBuilder(NETWORK_ERROR, error);
+    }
 }

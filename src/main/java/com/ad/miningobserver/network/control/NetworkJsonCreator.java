@@ -48,7 +48,7 @@ public class NetworkJsonCreator extends JsonCreator {
      * @return {@link FileAndObjectReference} object that holds the parsed 
      * {@code List} of GpuErrorStream objects, or empty {@code List} if the directory is empty
      */
-    public FileAndObjectReference<NetworkError> readGpuErrorStreamFiles() {
+    public FileAndObjectReference<NetworkError> readNetworkErrorFiles() {
         final List<String> files = this.fileFinder.getNetworkFiles();
         final List<NetworkError> errorStreamList = new ArrayList<>(files.size());
         for (String file : files) {

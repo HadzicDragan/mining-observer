@@ -5,7 +5,7 @@ import java.net.http.WebSocket.Listener;
 import java.util.concurrent.CompletionStage;
 
 import com.ad.miningobserver.network.NetworkConnection;
-import com.ad.miningobserver.operation.ExceptionOperationHandler;
+import com.ad.miningobserver.exception.ExceptionOperationHandler;
 import com.ad.miningobserver.util.StringUtils;
 
 import org.springframework.beans.factory.annotation.Autowired;

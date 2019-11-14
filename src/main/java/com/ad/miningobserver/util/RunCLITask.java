@@ -36,9 +36,7 @@ public class RunCLITask {
         private final List<String> inputStream;
         private final List<String> errorStream;
 
-        public ProcessResult(
-                List<String> inputStream, 
-                List<String> errorStream) {
+        public ProcessResult(List<String> inputStream, List<String> errorStream) {
             this.inputStream = inputStream;
             this.errorStream = errorStream;
         }
@@ -73,23 +71,17 @@ public class RunCLITask {
         
         List<String> inputStreamList = new ArrayList<>();
         try {
-            inputStreamList = (!inputStreamFuture.isDone()) ? 
-                    inputStreamFuture.get(30, TimeUnit.SECONDS) : 
-                    inputStreamFuture.get();
-        } catch (InterruptedException | 
-                ExecutionException | 
-                TimeoutException ex) {
+            inputStreamList = inputStreamFuture.isDone() 
+                ? inputStreamFuture.get() : inputStreamFuture.get(30, TimeUnit.SECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException ex) {
             ApplicationLogger.errorLogger().error(ex);
         }
         
         List<String> errorStreamList = new ArrayList<>();
         try {
-            errorStreamList = (!errorStreamFuture.isDone()) ? 
-                    errorStreamFuture.get(30, TimeUnit.SECONDS) : 
-                    errorStreamFuture.get();
-        } catch (InterruptedException | 
-                ExecutionException | 
-                TimeoutException ex) {
+            errorStreamList = errorStreamFuture.isDone() 
+                ? errorStreamFuture.get() : errorStreamFuture.get(30, TimeUnit.SECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException ex) {
             ApplicationLogger.errorLogger().error(ex);
         }
         
@@ -116,8 +108,7 @@ public class RunCLITask {
      * @return parsed InputStream as a list of strings.
      * @throws IOException when trying to close the input stream
      */
-    private List<String> readInputStream(final InputStream inputStream) 
-            throws IOException {
+    private List<String> readInputStream(final InputStream inputStream) throws IOException {
         try (BufferedReader bufferedReader = new BufferedReader(
                 new InputStreamReader(inputStream))) {
             return bufferedReader.lines().collect(Collectors.toList());

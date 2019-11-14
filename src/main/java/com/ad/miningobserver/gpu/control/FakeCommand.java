@@ -34,7 +34,7 @@ public class FakeCommand implements InputStreamProcessParser {
         
         if(this.internalCounter.get() == 2) {
             
-            this.service.notifyGpuCards(gpuCards);
+            this.service.publishGpuCards(gpuCards);
             this.internalCounter.set(0);
         }
         System.out.println(this.cache.getGpus());
@@ -44,10 +44,6 @@ public class FakeCommand implements InputStreamProcessParser {
     public void logGPUStatus() {
         List<GpuCard> gpus = this.cache.getGpus();
         gpus.forEach(gpu -> {
-
-            // check if fanspeed needs to be updated.
-            // #TODO maybe make a script that will update all the
-            // cards at once, this will cut the process calls alot
             TemperatureController.criticalTemperature(gpu);
         });
     }

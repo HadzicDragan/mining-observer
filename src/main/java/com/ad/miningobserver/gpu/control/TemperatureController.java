@@ -1,9 +1,11 @@
 package com.ad.miningobserver.gpu.control;
 
 import com.ad.miningobserver.gpu.entity.GpuCard;
+import com.ad.miningobserver.gpu.entity.GpuCriticalState;
+import com.ad.miningobserver.SpringContextLookup;
 import com.ad.miningobserver.gpu.FanSpeedOperation;
 import com.ad.miningobserver.operation.Operation.OrderCode;
-import com.ad.miningobserver.operation.boundary.OperationRegister;
+import com.ad.miningobserver.operation.OperationRegister;
 
 /**
  * Helper class that manages the fan speed of the graphic card
@@ -96,8 +98,9 @@ public class TemperatureController {
     public static void criticalTemperature(final GpuCard gpu) {
         FanOptions fanOptions = TemperatureController.temperatureIntensity(gpu.getTemperature());
         if (TemperatureController.isFanSpeedCritical(fanOptions)) {
+            final String uuid = TemperatureController.getSavedCriticalStateFile(gpu.getUUID());
             final FanSpeedOperation fanSpeedOperation = 
-                    new FanSpeedOperation(OrderCode.CRITICAL, fanOptions, gpu.getUUID());
+                    new FanSpeedOperation(OrderCode.CRITICAL, uuid);
             OperationRegister.getOperationRegister()
                     .addOperation(fanSpeedOperation);
         }
@@ -110,5 +113,18 @@ public class TemperatureController {
      */
     private static boolean isFanSpeedCritical(FanOptions fanOptions) {
         return (fanOptions == TemperatureController.FanOptions.CRITICAL);
+    }
+
+    /**
+     * Create a json file that will store the UUID of the gpu card that has
+     * {@code CRITICAL} temperature.
+     * 
+     * @param gpuUUID id of the gpu card
+     * @return file name without the extension
+     */
+    private static String getSavedCriticalStateFile(final String gpuUUID) {
+        final GpuJsonCreator jsonCreator = SpringContextLookup.getBean(GpuJsonCreator.class);
+        final GpuCriticalState gpuState = new GpuCriticalState(gpuUUID);
+        return jsonCreator.writeCriticalTemperatureJson(gpuState);
     }
 }

@@ -1,7 +1,7 @@
 package com.ad.miningobserver.client;
 
 import com.ad.miningobserver.network.RemoteServerStatus;
-import com.ad.miningobserver.operation.ExceptionOperationHandler;
+import com.ad.miningobserver.exception.ExceptionOperationHandler;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -47,19 +47,36 @@ public abstract class AbstractClient<T> {
      * Submit a POST request to the endpoint parameter.
      * 
      * @param endpoint to which the request will be made
-     * @param entity {@code HttpEntity} which will be served as payload for the request
+     * @param body {@code Object} which will be served as payload for the request
      * @return {@link ResponseEntity} or null if an exception is thrown
      * @throws RestClientException if the request could not be made for some reason
      */
-    protected ResponseEntity<Object> postObjectToUrl(final String endpoint, final HttpEntity entity) 
+    protected ResponseEntity<Object> postObjectToUrl(final String endpoint, final Object body) 
             throws RestClientException {
+        if (this.isRestDisabled()) {
+            return null;
+        }
+
         try {
-            return this.restTemplate.exchange(endpoint, HttpMethod.POST, entity, Object.class);
+            return this.restTemplate.exchange(
+                endpoint, HttpMethod.POST, new HttpEntity(body), Object.class);
         } catch (RestClientException ex) {
             ExceptionOperationHandler.registerExceptionOperation(
                     this.getClass(), ex, "postObjectToUrl()", endpoint);
             return null;
         }
+    }
+
+    /**
+     * Submit a POST request to the endpoint parameter.
+     * 
+     * @param endpoint to which the request will be made
+     * @param body {@code Object} which will be served as payload for the request
+     * @return {@code boolean} true if the request was successful, else false
+     * @throws RestClientException if the request could not be made for some reason
+     */
+    protected boolean postToEndpoint(final String endpoint, final Object body) {
+        return this.isOkResponseStatus(this.postObjectToUrl(endpoint, body));
     }
     
     /**
@@ -72,6 +89,11 @@ public abstract class AbstractClient<T> {
      */
     protected ResponseEntity<?> getObjectFromUrl(final String endpoint, Class<?> clazz) 
             throws RestClientException {
+        // remove when finished testing
+        // if (this.isRestDisabled()) {
+        //     return null;
+        // }
+
         try {
             return this.restTemplate.exchange(endpoint, HttpMethod.GET, null, clazz);
         } catch (RestClientException ex) {
@@ -90,6 +112,10 @@ public abstract class AbstractClient<T> {
      */
     protected boolean isOkResponseStatus(final ResponseEntity response) {
         return (response == null) ? false : response.getStatusCode().equals(HttpStatus.OK);
+    }
+
+    private boolean isRestDisabled() {
+        return (!this.isRestEnabled);
     }
     
     @Autowired
@@ -113,5 +139,4 @@ public abstract class AbstractClient<T> {
     protected final void setRestTemplate(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
-
 }

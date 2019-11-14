@@ -27,7 +27,7 @@ public class Command implements InputStreamProcessParser {
         final List<GpuCard> gpuCards = GpuCardParser.buildGPUs(list);
         this.cache.processGPUs(gpuCards);
         this.checkForCriticalGPUs(this.cache.getGpus());
-        this.service.notifyGpuCards(this.cache.getGpus());
+        this.service.publishGpuCards(this.cache.getGpus());
     }
     
     private void checkForCriticalGPUs(final List<GpuCard> gpus) {

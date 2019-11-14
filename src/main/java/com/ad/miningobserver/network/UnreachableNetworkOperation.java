@@ -1,7 +1,7 @@
 package com.ad.miningobserver.network;
 
 import com.ad.miningobserver.SpringContextLookup;
-import com.ad.miningobserver.network.control.NetworkJsonCreator;
+import com.ad.miningobserver.network.boundary.NetworkService;
 import com.ad.miningobserver.network.entity.NetworkError;
 import com.ad.miningobserver.operation.Operation;
 
@@ -18,21 +18,21 @@ public final class UnreachableNetworkOperation extends Operation {
     }
     
     /**
-     * Write to file the network message and date when the network was not available.
+     * Delegate to {@link NetworkService#publishNetworkError(NetworkError)}.
+     * Service will try to post to remote server, if the request was not successful
+     * will save the {@code NetworkError} to a file.
      */
     @Override
     public void run() {
-        final NetworkError networkError = new NetworkError(this.networkMessage);
-        final NetworkJsonCreator networkJsonCreator = this.getNetworkJsonCreator();
-        networkJsonCreator.writeNetworkJson(networkError);
+        this.getNetworkService().publishNetworkError(new NetworkError(this.networkMessage));
     }
 
     /**
-     * Lookup {@link NetworkJsonCreator} from Spring bean context lookup.
+     * Lookup {@link NetworkService} from Spring bean context lookup.
      * 
-     * @return {@link NetworkJsonCreator} bean representation
+     * @return {@link NetworkService} bean representation
      */
-    private NetworkJsonCreator getNetworkJsonCreator() {
-        return SpringContextLookup.getBean(NetworkJsonCreator.class);
+    private NetworkService getNetworkService() {
+        return SpringContextLookup.getBean(NetworkService.class);
     }
 }

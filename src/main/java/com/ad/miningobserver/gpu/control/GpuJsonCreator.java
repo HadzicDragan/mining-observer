@@ -62,6 +62,17 @@ public class GpuJsonCreator extends JsonCreator {
         final String jsonFile = super.jsonFilePath(this.fileFinder.getErrorDirectory(), uuid);
         return (GpuErrorStream) super.readJsonFile(jsonFile, GpuErrorStream.class);
     }
+
+    /**
+     * Read the {@link GpuCriticalState} object from file.
+     *
+     * @param uuid of file without the extension
+     * @return {@link GpuCriticalState}
+     */
+    public GpuCriticalState readCriticalStateJson(final String uuid) {
+        final String jsonFile = super.jsonFilePath(this.fileFinder.getTemperatureDirectory(), uuid);
+        return (GpuCriticalState) super.readJsonFile(jsonFile, GpuCriticalState.class);
+    }
     
     /**
      * Read the {@link GpuList} object from file.

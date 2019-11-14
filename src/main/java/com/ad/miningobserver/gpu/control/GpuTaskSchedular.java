@@ -17,9 +17,15 @@ public class GpuTaskSchedular implements SchedulingConfigurer {
     
     private static final int QUERY_TIME = 10 * 1000; // 10sec
     private static final int DELAY_TIME = 5 * 1000; // 5sec
-    
+
+    private final TaskExecutorFakeImpl taskExecutor;
+    private final GpuQueryTask gpuQueryTask;
+
     @Autowired
-    private GpuQueryTask gpuQueryTask;
+    public GpuTaskSchedular(TaskExecutorFakeImpl taskExecutor) {
+        this.taskExecutor = taskExecutor;
+        this.gpuQueryTask = new GpuQueryTask();
+    }
 
     /**
      * Scheduled thread pool for running GPU lookup
@@ -35,5 +41,18 @@ public class GpuTaskSchedular implements SchedulingConfigurer {
                 new IntervalTask(this.gpuQueryTask, QUERY_TIME, DELAY_TIME);
         registrar.addFixedDelayTask(intervalTask);
         registrar.setScheduler(this.gpuThreadPoolSchedular());
+    }
+
+    /**
+     * Class that will execute a query to the underlying graphics card provider and
+     * retrieve the statistics information.
+     */
+    private class GpuQueryTask implements Runnable {
+
+        @Override
+        public void run() {
+            final String[] queryArgs = new SMICommand().queryMendatoryInfoGPUs();
+            taskExecutor.executeCommand(queryArgs);
+        }
     }
 }

@@ -3,10 +3,13 @@ package com.ad.miningobserver.gpu.control;
 import com.ad.miningobserver.gpu.InputStreamProcessParser;
 import com.ad.miningobserver.gpu.GpuErrorOperation;
 import com.ad.miningobserver.operation.Operation;
-import com.ad.miningobserver.operation.boundary.OperationRegister;
+import com.ad.miningobserver.operation.OperationRegister;
 import com.ad.miningobserver.gpu.entity.GpuErrorStream;
-import java.util.ArrayList;
+import com.ad.miningobserver.util.EntryHolder;
+
 import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -26,14 +29,10 @@ public class CommandError implements InputStreamProcessParser {
 
     @Override
     public void commandLineOutput(final List<String> errorStreamList) {
-        List<String> sortedErrorList = this.parseErrorStream(errorStreamList);
-        if (!sortedErrorList.isEmpty()) {
-            // #TODO check if this is coverd valid scenarios
-            // MEANING if the comments below are valid
-            // need the specific error codes and their messages
-            // notify the with the email so I can see what happend
-            final GpuErrorStream errorStream = new GpuErrorStream();
-            errorStream.setErrorList(sortedErrorList);
+        final EntryHolder<List<String>, List<String>> entry = this.parseErrorStream(errorStreamList);
+        if (!entry.getFirst().isEmpty() || entry.getSecond().isEmpty()) {
+            final GpuErrorStream errorStream = new GpuErrorStream(
+                entry.getFirst(), entry.getSecond());
 
             final String jsonUUID = this.jsonCreator.writeErrorJson(errorStream);
             final GpuErrorOperation operation = 
@@ -42,15 +41,14 @@ public class CommandError implements InputStreamProcessParser {
         }
     }
     
-    public List<String> parseErrorStream(List<String> errorStream) {
-        final List<String> errorList = new ArrayList<>(errorStream.size());
-        errorStream.forEach((errorMessage) -> {
-            GpuError.getErrorList().forEach(errorCode -> {
-                if (errorMessage.contains(errorCode)) {
-                    errorList.add(errorMessage);
-                }
-            });
-        });
-        return errorList;
+    public EntryHolder<List<String>, List<String>> parseErrorStream(final List<String> errorStream) {
+        final List<String> errorList = errorStream.stream()
+            .filter(val -> GpuError.getErrorList().contains(val))
+            .collect(Collectors.toList());
+        
+        final List<String> uncommonErrorList = errorStream.stream()
+            .filter(val -> !errorList.contains(val))
+            .collect(Collectors.toList());
+        return new EntryHolder<>(errorList, uncommonErrorList);
     }
 }

@@ -1,7 +1,6 @@
 package com.ad.miningobserver.operation;
 
 /**
- * #TODO 
  * This will be implemented in future versions.
  * The idea is to make a Operation that will shutdown the entire application
  * and send the required information to the Server.

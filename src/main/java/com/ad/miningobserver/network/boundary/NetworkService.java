@@ -1,9 +1,11 @@
 package com.ad.miningobserver.network.boundary;
 
-import com.ad.miningobserver.client.monitoring.boundary.ActuatorClient;
+import javax.annotation.PostConstruct;
+
 import com.ad.miningobserver.file.Creator;
 import com.ad.miningobserver.network.control.NetworkJsonCreator;
 import com.ad.miningobserver.network.entity.NetworkError;
+import com.ad.miningobserver.operation.batch.BatchOperation;
 import com.ad.miningobserver.util.FileAndObjectReference;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,17 +22,25 @@ public class NetworkService {
     
     @Autowired
     private NetworkJsonCreator jsonCreator;
-    
+
     @Autowired
-    private ActuatorClient actuatorClient;
-    
-    /**
-     * Check the remote server is available.
-     * 
-     * @return {@code boolean} true if the remote server is available, else false.
-     */
-    public boolean isActiveServer() {
-        return this.actuatorClient.isServerActive();
+    private BatchOperation batchOperation;
+
+    @Autowired
+    private NetworkBatch networkBatch;
+
+    @PostConstruct
+    private void initBatchProcessing() {
+        this.batchOperation.registerBatchJob(networkBatch);
+    }
+
+    public void publishNetworkError(final NetworkError networkError) {
+        final boolean isPosted = this.networkClient.postNetworkError(networkError);
+        if (isPosted) {
+            return;
+        }
+
+        jsonCreator.writeNetworkJson(networkError);
     }
     
     /**
@@ -39,9 +49,9 @@ public class NetworkService {
      * is not reachable, email the client about the errors.
      * 
      */
-    public void publishNetworkErrors() {
+    public void batchNetworkErrors() {
         final FileAndObjectReference<NetworkError> reference = 
-                this.jsonCreator.readGpuErrorStreamFiles();
+                this.jsonCreator.readNetworkErrorFiles();
         if (reference.getObjects().isEmpty()) {
             return;
         }
@@ -49,6 +59,7 @@ public class NetworkService {
         final boolean isPosted = this.networkClient.postNetworkErrors(reference.getObjects());
         if (isPosted) {
             Creator.removeFiles(reference.getFiles());
+            return;
         }
 
         // #TODO mail should be sent to owner if remote server is down.
