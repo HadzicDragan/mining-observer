@@ -1,11 +1,16 @@
 package com.ad.miningobserver.client;
 
 import com.ad.miningobserver.network.RemoteServerStatus;
+import com.ad.miningobserver.network.control.LocalNetwork;
+
+import javax.annotation.PostConstruct;
+
 import com.ad.miningobserver.exception.ExceptionOperationHandler;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +27,8 @@ public abstract class AbstractClient<T> {
      * Remote server URL and PORT number, value from application.properties 
      */
     protected String containerPath;
+    protected String hostName;
+
     /**
      * Is REST endpoint enabled for the application, value from application.properties 
      */
@@ -42,6 +49,11 @@ public abstract class AbstractClient<T> {
     protected boolean notAvailableServer() {
         return !this.serverStatus.isServerAvailable();
     }
+
+    @PostConstruct
+    private void initHostName() {
+        this.hostName = LocalNetwork.getHostName();
+    }
     
     /**
      * Submit a POST request to the endpoint parameter.
@@ -59,7 +71,10 @@ public abstract class AbstractClient<T> {
 
         try {
             return this.restTemplate.exchange(
-                endpoint, HttpMethod.POST, new HttpEntity(body), Object.class);
+                endpoint, 
+                HttpMethod.POST, 
+                new HttpEntity(body, buildHeaders()), 
+                Object.class);
         } catch (RestClientException ex) {
             ExceptionOperationHandler.registerExceptionOperation(
                     this.getClass(), ex, "postObjectToUrl()", endpoint);
@@ -95,7 +110,11 @@ public abstract class AbstractClient<T> {
         // }
 
         try {
-            return this.restTemplate.exchange(endpoint, HttpMethod.GET, null, clazz);
+            return this.restTemplate.exchange(
+                endpoint, 
+                HttpMethod.GET, 
+                new HttpEntity<>(this.buildHeaders()), 
+                clazz);
         } catch (RestClientException ex) {
             ExceptionOperationHandler.registerExceptionOperation(
                     this.getClass(), ex, "getObjectFromUrl()", endpoint);
@@ -114,8 +133,23 @@ public abstract class AbstractClient<T> {
         return (response == null) ? false : response.getStatusCode().equals(HttpStatus.OK);
     }
 
+    /**
+     * @return {@code boolean} true if REST is disabled via configuration file else false
+     */
     private boolean isRestDisabled() {
         return (!this.isRestEnabled);
+    }
+
+    /**
+     * Build the {@link HttpHeaders} with the valid headers.
+     * 
+     * @return {@code HttpHeaders} with prefilled headers
+     */
+    private HttpHeaders buildHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("auth", this.hostName);
+
+        return headers;
     }
     
     @Autowired
