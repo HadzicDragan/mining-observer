@@ -151,7 +151,7 @@ public class Finder {
         directories.add("data/error");
         directories.add("data/network");
         directories.add("data/gpu");
-	directories.add("data/gpu/error");
+	    directories.add("data/gpu/error");
         directories.add("data/temperature");
         return directories;
     }

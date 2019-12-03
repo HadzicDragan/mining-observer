@@ -48,9 +48,9 @@ public class GpuService {
      * @param gpuCards {@code List} of gpu cards
      */
     public void publishGpuCards(final List<GpuCard> gpuCards) {
-        final boolean isNotified = this.client.postGpuTemperatures(gpuCards);
+        final GpuList gpuList = new GpuList(gpuCards);
+        final boolean isNotified = this.client.postGpuCards(gpuList);
         if (!isNotified) {
-            final GpuList gpuList = new GpuList(gpuCards);
             this.jsonCreator.writeGpuListJson(gpuList);
         }
     }

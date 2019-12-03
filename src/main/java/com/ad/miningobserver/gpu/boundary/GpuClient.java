@@ -30,11 +30,6 @@ public class GpuClient extends AbstractClient {
         this.simpleCounter.incrementAndGet();
         return true;
     }
-    
-    public boolean postGpuTemperatures(final List<GpuCard> gpuCards) {
-        final String endpoint = new GpuPath(super.containerPath).buildGPUTemperaturesEndpoint();
-        return super.postToEndpoint(endpoint, gpuCards);
-    }
 
     public boolean postGpuCards(final GpuList gpuList) {
         // #TODO change endpoint path
