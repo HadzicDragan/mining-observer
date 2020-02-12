@@ -61,7 +61,8 @@ public class FileCleanupSchedular implements SchedulingConfigurer {
         public void run() {
             this.cleanupGpuListDirectory();
             this.cleanupNetworkDirectory();
-            this.cleanupErrorDirectory();
+            // #TODO add this cleanup after added implemenation to container
+            // this.cleanupErrorDirectory();
             this.cleanupTemperatureDirectory();
         }
         
