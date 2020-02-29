@@ -7,6 +7,7 @@ import com.ad.miningobserver.client.ClientPath;
  */
 public class ExceptionPath extends ClientPath {
 
+    private static final String EXCEPTION_ROOT_PATH = "/workers";
     private static final String EXCEPTION_PATH = "/exceptions";
 
     public ExceptionPath(String hostName) {
@@ -18,7 +19,11 @@ public class ExceptionPath extends ClientPath {
      * 
      * @return constructed URL endpoint
      */
-    public String buildExceptionPath() {
-        return super.pathBuilder(EXCEPTION_PATH);
+    public String buildExceptionPath(String workerName) {
+        return super.pathBuilder(
+            EXCEPTION_ROOT_PATH, 
+            ClientPath.PATH_SEPARATOR,
+            workerName, 
+            EXCEPTION_PATH);
     }
 }

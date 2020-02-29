@@ -1,6 +1,5 @@
 package com.ad.miningobserver.operation;
 
-import com.ad.miningobserver.operation.Operation;
 import com.ad.miningobserver.NameReference;
 import com.ad.miningobserver.SpringContextLookup;
 import com.ad.miningobserver.operation.Operation.OrderCode;

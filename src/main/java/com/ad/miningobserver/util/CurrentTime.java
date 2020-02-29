@@ -6,14 +6,14 @@ import java.time.ZoneOffset;
 /**
  * CurrentTime
  */
-public interface CurrentTime {
+public class CurrentTime {
     
     /**
      * Current time in UTC offset.
      * 
      * @return the current date time in UTC offset
      */
-    default LocalDateTime currentTimeUTC() {
+    public static LocalDateTime currentTimeUTC() {
         return LocalDateTime.now(ZoneOffset.UTC);
     }
 }

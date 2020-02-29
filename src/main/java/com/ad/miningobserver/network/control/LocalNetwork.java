@@ -30,6 +30,11 @@ public final class LocalNetwork {
     private NetworkInterface networkInterface;
     private OperationRegister register;
 
+    @Autowired
+    public LocalNetwork(OperationRegister register) {
+        this.register = register;
+    }
+
     @PostConstruct
     private void postInitializationNetworkInterfaceBinding() {
         this.initiateNetworkInterface(null);
@@ -113,7 +118,6 @@ public final class LocalNetwork {
                 .orElse(NETWORK_UNABLE_MESSAGE);
     }
     
-    
     private boolean networkInterfaceDown() throws SocketException {
         return !networkInterface.isUp();
     }
@@ -134,10 +138,5 @@ public final class LocalNetwork {
         final UnreachableNetworkOperation networkOperation =
                 new UnreachableNetworkOperation(OrderCode.CRITICAL, message);
         this.register.addOperation(networkOperation);
-    }
-
-    @Autowired
-    public void setRegister(OperationRegister register) {
-        this.register = register;
     }
 }

@@ -34,7 +34,7 @@ public class ExceptionOperationHandler {
                 new ExceptionLoggerOperation(OrderCode.LIGHT, exceptionError);
         OperationRegister.getOperationRegister()
                 .addOperation(exceptionOperation);
-        ApplicationLogger.errorLogger().error(ex);
+        ApplicationLogger.errorLogger().error(ex.getLocalizedMessage(), ex);
     }
 
     /**

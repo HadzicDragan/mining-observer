@@ -1,15 +1,18 @@
 package com.ad.miningobserver.gpu.boundary;
 
 import com.ad.miningobserver.file.Creator;
+import com.ad.miningobserver.gpu.control.GpuCardToThermalMapper;
+import com.ad.miningobserver.gpu.control.GpuClientState;
 import com.ad.miningobserver.gpu.control.GpuJsonCreator;
 import com.ad.miningobserver.gpu.entity.GpuCard;
-import com.ad.miningobserver.gpu.entity.GpuCriticalState;
-import com.ad.miningobserver.mail.MailService;
-import com.ad.miningobserver.operation.batch.BatchOperation;
+import com.ad.miningobserver.gpu.entity.GpuCardsUuids;
 import com.ad.miningobserver.gpu.entity.GpuErrorStream;
-import com.ad.miningobserver.gpu.entity.GpuList;
+import com.ad.miningobserver.gpu.entity.GpuThermal;
+import com.ad.miningobserver.gpu.entity.GpuThermals;
 import com.ad.miningobserver.util.FileAndObjectReference;
+
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
@@ -22,23 +25,20 @@ public class GpuService {
     @Autowired
     private GpuJsonCreator jsonCreator;
     
-    // #TODO add email implementation
-    // @Autowired
-    // private MailService mailService;
-    
     @Autowired
     private GpuClient client;
 
     @Autowired
-    private BatchOperation batchOperation;
+    private GpuBatchInitiator batchInitiator;
 
     @Autowired
-    private GpuBatch gpuBatch;
+    private GpuClientState gpuState;
 
     @PostConstruct
     private void initBatchProcessing() {
-        this.batchOperation.registerBatchJob(gpuBatch);
+        this.batchInitiator.initBatchProcessing();
     }
+
     
     /**
      * POST {@code GpuCard} list to remote server.
@@ -48,27 +48,31 @@ public class GpuService {
      * @param gpuCards {@code List} of gpu cards
      */
     public void publishGpuCards(final List<GpuCard> gpuCards) {
-        final GpuList gpuList = new GpuList(gpuCards);
-        final boolean isNotified = this.client.postGpuCards(gpuList);
-        if (!isNotified) {
-            this.jsonCreator.writeGpuListJson(gpuList);
+        if (this.gpuState.areGpuUuidsPersisted()) {
+            this.pushGpuCardsStatus(gpuCards);
+            return;
         }
+
+        final boolean isNotified = this.client
+            .postGpuCardsUuids(this.collectGpuCardsUuids(gpuCards));
+        if (!isNotified) {
+            this.jsonCreator.writeGpuThermalJson(this.collectGpuThermalsToWrapper(gpuCards));
+            return;
+        }
+        this.gpuState.gpuUuidsPersisted();
+        this.pushGpuCardsStatus(gpuCards);
     }
     
     /**
-     * POST {@code GpuList} to the remote server.
+     * POST {@code GpuThermal} to the remote server.
      * 
      * @param fileUUID file name without the extension
      */
-    public void pushGpuCardsStatus(final String fileUUID) {
-        final GpuList gpuList = this.jsonCreator.readGpuListJson(fileUUID);
-        if (gpuList == null) {
-            return;
-        }
-        
-        final boolean isPosted = this.client.postGpuCards(gpuList);
-        if (isPosted) {
-            Creator.removeGpuListFile(fileUUID);
+    public void pushGpuCardsStatus(final List<GpuCard> gpuCards) {
+        final List<GpuThermal> gpuThermals = collectGpuThermals(gpuCards);
+        final boolean isPosted = this.client.postGpuThermals(gpuThermals);
+        if (!isPosted) {
+            this.jsonCreator.writeGpuThermalJson(this.collectGpuThermalsToWrapper(gpuCards));
         }
     }
     
@@ -84,41 +88,62 @@ public class GpuService {
             return;
         }
         
-        final boolean isPosted = this.client.postErrorStream(errorStream);
+        final boolean isPosted = this.client.postGpuError(errorStream);
         this.removeFileById(isPosted, fileUUID);
         if (!isPosted) {
     // #TODO send mail because not able to post to remote server.
 //      this.mailService.sendMail();
         }
     }
-    
+
     /**
-     * POST {@code GpuCriticalState} to remote server. 
+     * Batch POST the gpu errors to the remote server;
+     */
+    public void batchGpuErrors() {
+        final FileAndObjectReference<GpuErrorStream> fileReference = 
+            this.jsonCreator.readGpuErrorStreamFiles();
+        if (fileReference.getObjects().isEmpty()) {
+            return;
+        }
+
+        final boolean isBatchPosted = this.client.batchErrorStream(fileReference.getObjects());
+        this.cleanupAfterBatchProcess(isBatchPosted, fileReference.getFiles());
+    }
+
+    /**
+     * POST {@code GpuThermal} to remote server. 
      * If the request was unsuccessful, email the owner that an error has occurred.
      */
     public void publishCriticalTemperature(final String fileUUID) {
-        final GpuCriticalState gpuState = this.jsonCreator.readCriticalStateJson(fileUUID);
+        final GpuThermal gpuThermal = this.jsonCreator.readCriticalGpuThermalJson(fileUUID);
         if (gpuState == null) {
             return;
         }
-        final boolean isPosted = this.client.postCriticalTemperatureByUUID(gpuState);
+        final boolean isPosted = this.client.postGpuCriticalThermal(gpuThermal);
         this.removeFileById(isPosted, fileUUID);
         if (!isPosted) {
             // #TODO send mail because not able to post to remote server.
 //          this.mailService.sendMail();
         }
     }
+
+    /**
+     * batchGpuThermals() && batchGpuTemperatureStatus() uses the same type list
+     * this should be implemented with some kind of template pattern
+     * #TODO add this functionality inside v2
+     */
     
     /**
      * Batch POST the gpu cards status to the remote server;
      */
-    public void batchGpuCardsStatus() {
-        final FileAndObjectReference<GpuList> fileReference = this.jsonCreator.readGpuListFiles();
+    public void batchGpuThermals() {
+        final FileAndObjectReference<GpuThermal> fileReference = 
+            this.jsonCreator.readGpuThermalFiles();
         if (fileReference.getObjects().isEmpty()) {
             return;
         }
         
-        final boolean isBatchPosted = this.client.batchGpuCards(fileReference.getObjects());
+        final boolean isBatchPosted = this.client.batchGpuTemperatures(fileReference.getObjects());
         this.cleanupAfterBatchProcess(isBatchPosted, fileReference.getFiles());
     }
 
@@ -126,7 +151,7 @@ public class GpuService {
      * Batch POST the gpu temperature status to remote server;
      */
     public void batchGpuTemperatureStatus() {
-        final FileAndObjectReference<GpuCriticalState> fileReference = 
+        final FileAndObjectReference<GpuThermal> fileReference = 
                 this.jsonCreator.readTemperatureFiles();
         if (fileReference.getObjects().isEmpty()) {
             return;
@@ -158,5 +183,24 @@ public class GpuService {
         if (remove) {
             Creator.removeErrorFileByID(file);
         }
+    }
+
+    private GpuThermals collectGpuThermalsToWrapper(final List<GpuCard> gpuCards) {
+        return new GpuThermals(this.collectGpuThermals(gpuCards)); 
+    }
+
+    private List<GpuThermal> collectGpuThermals(final List<GpuCard> gpuCards) {
+        return gpuCards.stream()
+            .map(GpuCardToThermalMapper::cardToThermalInformation)
+            .collect(Collectors.toList());
+    }
+
+    private GpuCardsUuids collectGpuCardsUuids(final List<GpuCard> gpuCards) {
+        final List<String> gpuUuidsList = gpuCards.stream()
+            .map(gpu -> gpu.getUUID())
+            .collect(Collectors.toList());
+        final GpuCardsUuids gpuUuids = new GpuCardsUuids();
+        gpuUuids.uuids = gpuUuidsList;
+        return gpuUuids;
     }
 }

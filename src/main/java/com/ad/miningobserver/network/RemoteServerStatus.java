@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class RemoteServerStatus implements EventDesignator<Connection> {
 
-    private final AtomicBoolean available = new AtomicBoolean(false);
+    private final AtomicBoolean available = new AtomicBoolean(true);
 
     /**
      * Describes if the remote server is available or not

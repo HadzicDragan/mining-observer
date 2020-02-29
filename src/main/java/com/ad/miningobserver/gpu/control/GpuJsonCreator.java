@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.ad.miningobserver.file.Finder;
-import com.ad.miningobserver.gpu.entity.GpuCriticalState;
 import com.ad.miningobserver.gpu.entity.GpuErrorStream;
-import com.ad.miningobserver.gpu.entity.GpuList;
+import com.ad.miningobserver.gpu.entity.GpuThermal;
+import com.ad.miningobserver.gpu.entity.GpuThermals;
 import com.ad.miningobserver.util.FileAndObjectReference;
 import com.ad.miningobserver.util.JsonCreator;
 
@@ -38,7 +38,7 @@ public class GpuJsonCreator extends JsonCreator {
      * @param value object that will be written to JSON file
      * @return UUID of file without the extension
      */
-    public String writeGpuListJson(final Object value) {
+    public String writeGpuThermalJson(final Object value) {
         return super.writeToFile(value, this.fileFinder.getGpuListDirectory());
     }
     
@@ -64,25 +64,36 @@ public class GpuJsonCreator extends JsonCreator {
     }
 
     /**
-     * Read the {@link GpuCriticalState} object from file.
+     * Read the {@link GpuThermal} object from file.
      *
      * @param uuid of file without the extension
-     * @return {@link GpuCriticalState}
+     * @return {@link GpuThermal}
      */
-    public GpuCriticalState readCriticalStateJson(final String uuid) {
+    public GpuThermal readCriticalGpuThermalJson(final String uuid) {
         final String jsonFile = super.jsonFilePath(this.fileFinder.getTemperatureDirectory(), uuid);
-        return (GpuCriticalState) super.readJsonFile(jsonFile, GpuCriticalState.class);
+        return (GpuThermal) super.readJsonFile(jsonFile, GpuThermal.class);
     }
     
     /**
-     * Read the {@link GpuList} object from file.
+     * Read the {@link GpuThermal} object from file.
      *
      * @param uuid of file without the extension
-     * @return {@link GpuList}
+     * @return {@link GpuThermal}
      */
-    public GpuList readGpuListJson(final String uuid) {
+    public GpuThermal readGpuListJson(final String uuid) {
         final String jsonFile = super.jsonFilePath(this.fileFinder.getGpuListDirectory(), uuid);
-        return (GpuList) super.readJsonFile(jsonFile, GpuList.class);
+        return (GpuThermal) super.readJsonFile(jsonFile, GpuThermal.class);
+    }
+    
+    /**
+     * Read the {@link GpuThermals} object from file.
+     *
+     * @param uuid of file without the extension
+     * @return {@link GpuThermals}
+     */
+    public GpuThermals readGpuThermalsJson(final String uuid) {
+        final String jsonFile = super.jsonFilePath(this.fileFinder.getGpuListDirectory(), uuid);
+        return (GpuThermals) super.readJsonFile(jsonFile, GpuThermals.class);
     }
 
     /**
@@ -110,19 +121,21 @@ public class GpuJsonCreator extends JsonCreator {
      * If there are no gpu files, an empty {@code List} will be retured.
      * 
      * @return {@link FileAndObjectReference} object that holds the 
-     * parsed {@code List} of GpuList objects, or empty {@code List} if the directory is empty
+     * parsed {@code List} of GpuThermal objects, or empty {@code List} if the directory is empty
      */
-    public FileAndObjectReference<GpuList> readGpuListFiles() {
+    public FileAndObjectReference<GpuThermal> readGpuThermalFiles() {
         final List<String> files = this.fileFinder.getGpuListFiles();
-        final List<GpuList> gpuCardList = new ArrayList<>(files.size());
+        final List<GpuThermal> gpuThermalList = new ArrayList<>(files.size());
         for (String file : files) {
-            final GpuList gpuCards = (GpuList) 
-                    super.readJsonFile(file, GpuList.class);
-            if (gpuCards != null) {
-                gpuCardList.add(gpuCards);
+            final GpuThermals gpuThermals = (GpuThermals) 
+                    super.readJsonFile(file, GpuThermals.class);
+            if (gpuThermals != null) {
+                for (GpuThermal thermal : gpuThermals.getGpuThermals()) {
+                    gpuThermalList.add(thermal);
+                }
             }
         }
-        return new FileAndObjectReference<>(files, gpuCardList);
+        return new FileAndObjectReference<>(files, gpuThermalList);
     }
 
     /**
@@ -132,14 +145,17 @@ public class GpuJsonCreator extends JsonCreator {
      * @return {@link FileAndObjectReference} object that holds the 
      * reference to {@code List} files and {@code List} gpu critical state;
      */
-    public FileAndObjectReference<GpuCriticalState> readTemperatureFiles() {
+    public FileAndObjectReference<GpuThermal> readTemperatureFiles() {
+        // #TODO this should use a tempate pattern
+        // in the first iteration copy paste will be used
+        // this method is the same as {@code readGpuListFiles()}
         final List<String> files = this.fileFinder.getTemperatureFiles();
-        final List<GpuCriticalState> gpuCriticalList = new ArrayList<>(files.size());
+        final List<GpuThermal> gpuCriticalList = new ArrayList<>(files.size());
         for (String file : files) {
-            final GpuCriticalState gpuCriticalState = (GpuCriticalState) 
-                    super.readJsonFile(file, GpuCriticalState.class);
-            if (gpuCriticalState != null) {
-                gpuCriticalList.add(gpuCriticalState);
+            final GpuThermal gpuThermal = (GpuThermal) 
+                    super.readJsonFile(file, GpuThermal.class);
+            if (gpuThermal != null) {
+                gpuCriticalList.add(gpuThermal);
             }
         }
         return new FileAndObjectReference<>(files, gpuCriticalList);

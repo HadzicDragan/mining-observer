@@ -37,7 +37,6 @@ public class FakeCommand implements InputStreamProcessParser {
             this.service.publishGpuCards(gpuCards);
             this.internalCounter.set(0);
         }
-        System.out.println(this.cache.getGpus());
         this.internalCounter.getAndIncrement();
     }
     

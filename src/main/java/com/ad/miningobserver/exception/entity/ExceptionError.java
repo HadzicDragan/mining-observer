@@ -4,24 +4,24 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDateTime;
 import com.ad.miningobserver.util.CurrentTime;
 
-public class ExceptionError implements CurrentTime {
+public class ExceptionError {
 
     private String errorMessage;
     private String className;
     private String methodName;
     private Object objValue;
-    
-    private final LocalDateTime currentDateTime;
+    private LocalDateTime currentDateTime;
 
     public ExceptionError() {
-        this.currentDateTime = this.currentTimeUTC();
+        this.currentDateTime = CurrentTime.currentTimeUTC();
     }
 
     public ExceptionError(
             String errorMessage, 
             String className, 
-            String methodName) {
-        this.currentDateTime = this.currentTimeUTC();
+            String methodName,
+            LocalDateTime reported) {
+        this.currentDateTime = reported;
         this.errorMessage = errorMessage;
         this.className = className;
         this.methodName = methodName;
@@ -31,8 +31,9 @@ public class ExceptionError implements CurrentTime {
             String errorMessage, 
             String className, 
             String methodName, 
-            Object objValue) {
-        this.currentDateTime = this.currentTimeUTC();
+            Object objValue,
+            LocalDateTime reported) {
+        this.currentDateTime = reported;
         this.errorMessage = errorMessage;
         this.className = className;
         this.methodName = methodName;
@@ -71,7 +72,7 @@ public class ExceptionError implements CurrentTime {
         this.objValue = objValue;
     }
 
-    @JsonProperty(value = "dateTime")
+    @JsonProperty(value = "reportedDate")
     public LocalDateTime getCurrentDateTime() {
         return currentDateTime;
     }
@@ -82,6 +83,7 @@ public class ExceptionError implements CurrentTime {
         private String className;
         private String methodName;
         private Object objValue;
+        // private LocalDateTime currentDateTime;
 
         public Builder errorMessage(final String errorMessage) {
             this.errorMessage = errorMessage;
@@ -108,7 +110,8 @@ public class ExceptionError implements CurrentTime {
                     this.errorMessage, 
                     this.className, 
                     this.methodName, 
-                    this.objValue
+                    this.objValue,
+                    CurrentTime.currentTimeUTC()
             );
         }
     }

@@ -7,19 +7,20 @@ import java.net.http.WebSocket;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 
-import javax.annotation.PostConstruct;
-
 import com.ad.miningobserver.EventDesignator;
 import com.ad.miningobserver.NameReference;
+import com.ad.miningobserver.OnInit;
 import com.ad.miningobserver.PathLocation;
 import com.ad.miningobserver.network.Connection;
 import com.ad.miningobserver.network.control.LocalNetwork;
 import com.ad.miningobserver.exception.ExceptionOperationHandler;
+import com.ad.miningobserver.util.ApplicationLogger;
 import com.ad.miningobserver.util.EntryHolder;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.DependsOn;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -32,7 +33,7 @@ import org.springframework.stereotype.Component;
     NameReference.NETWORK_LOCAL_BEAN,
     NameReference.NETWORK_LOOKUP_TASK_BEAN
 })
-public class WebSocketConnection implements EventDesignator<Connection> {
+public class WebSocketConnection implements EventDesignator<Connection>, OnInit {
     
     private final WebSocketMessageListener wsMessageListener;
     private final LocalNetwork localNetwork;
@@ -48,6 +49,8 @@ public class WebSocketConnection implements EventDesignator<Connection> {
     private boolean websocketEnabled;
     
     private String wsEndpointURL;
+
+    private boolean init;
     
     @Autowired
     public WebSocketConnection(WebSocketMessageListener wsListener, LocalNetwork network) {
@@ -58,14 +61,25 @@ public class WebSocketConnection implements EventDesignator<Connection> {
     /**
      * Initialize the websocket connection after the Spring bean has been created.
      */
-    @PostConstruct
-    private final void init() {
+    @Override
+    public void initialize() {
         if (!this.websocketEnabled) {
             return;
         }
-
         this.wsEndpointURL = this.buildEndpoint();
         this.checkNetworkConnectionAndConnectToServer();
+
+        this.init = true;
+    }
+
+    // #TODO move this to a annotation based implementation
+    // that will lookup every class that has @OnInit interface implemented
+    @EventListener
+    public final void onStartup(ContextRefreshedEvent event) {
+        if (init) {
+            return;
+        }
+        this.initialize();
     }
     
     /**
@@ -164,23 +178,29 @@ public class WebSocketConnection implements EventDesignator<Connection> {
         }
         
         final HttpClient httpClient = HttpClient.newHttpClient();
-        this.webSocket = httpClient.newWebSocketBuilder()
+        try {
+            this.webSocket = httpClient.newWebSocketBuilder()
                 .header(entry.getFirst(), entry.getSecond())
                 .connectTimeout(connectionTimeout)
                 .buildAsync(new URI(this.wsEndpointURL), this.wsMessageListener)
                 .join();
+        } catch (Exception ex) {
+            this.webSocket = null;
+            ApplicationLogger.saveError(ex);
+            return;
+        }
     }
 
     private String buildEndpoint() {
         StringBuilder builder = new StringBuilder();
         return builder.append(wsProtocol)
-                .append("://")
-                .append(this.containerIPAddress)
-                .append(":")
-                .append(portNumber)
-                .append(PathLocation.CONTAINER)
-                .append(PathLocation.WEBSOCKET_ENDPOINT)
-                .toString();
+            .append("://")
+            .append(this.containerIPAddress)
+            .append(":")
+            .append(portNumber)
+            .append(PathLocation.CONTAINER)
+            .append(PathLocation.WEBSOCKET_ENDPOINT)
+            .toString();
     }
     
     /**

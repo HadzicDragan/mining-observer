@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -202,13 +203,10 @@ public class Finder {
     }
 
     private List<String> getFilesInDirectory(final File file) {
-        final File[] directoryFiles = file.listFiles();
-        final List<String> files = new ArrayList<>(directoryFiles.length);
-        for (int i = 0; i < directoryFiles.length; i++) {
-            File localFile = directoryFiles[i];
-            files.add(localFile.getPath());
-        }
-        return files;
+        return Arrays.stream(file.listFiles())
+            .filter(File::isFile)
+            .map(File::getPath)
+            .collect(Collectors.toList());
     }
     
     public synchronized List<Path> getFilesByDate(final String directory, final DateReference dateRef) {

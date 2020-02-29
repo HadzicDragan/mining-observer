@@ -18,7 +18,8 @@ public class ExceptionClient extends AbstractClient {
      * @param exceptionError
      */
     public boolean postException(final ExceptionError exceptionError) {
-        final String endpoint = new ExceptionPath(super.containerPath).buildExceptionPath();
+        final String endpoint = new ExceptionPath(super.containerPath)
+            .buildExceptionPath(super.hostName);
         return super.postToEndpoint(endpoint, exceptionError);
     }
 }

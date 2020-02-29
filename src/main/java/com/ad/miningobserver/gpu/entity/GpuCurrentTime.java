@@ -8,15 +8,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * GpuCurrentTime
  */
-public abstract class GpuCurrentTime implements CurrentTime {
+public abstract class GpuCurrentTime {
 
     protected final LocalDateTime currentDateTime;
 
     public GpuCurrentTime() {
-        this.currentDateTime = this.currentTimeUTC();
+        this.currentDateTime = CurrentTime.currentTimeUTC();
     }
 
-    @JsonProperty(value = "dateTime")
+    @JsonProperty(value = "reportedDate")
     protected LocalDateTime getCurrentDateTime() {
         return currentDateTime;
     }

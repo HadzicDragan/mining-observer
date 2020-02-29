@@ -182,7 +182,8 @@ public class Creator {
     private static boolean removeFile(final String filePath) {
         Path path = Path.of(filePath);
         try {
-            return Files.deleteIfExists(path);
+            return Files.isRegularFile(path) ? 
+                Files.deleteIfExists(path) : false;
         } catch (IOException ex) {
             ExceptionOperationHandler.registerExceptionOperation(
                     Creator.class, ex, "removeFile(final String filePath)", filePath);

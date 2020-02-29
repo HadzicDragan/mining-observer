@@ -15,19 +15,14 @@ import org.springframework.stereotype.Component;
 public class NetworkClient extends AbstractClient {
 
     /**
-     * #TODO change the {@link NetworkPath} method
      * Post network error to remote server.
      * 
      * @return {@code boolean} true if POST request was successful, else false
      */
-    public boolean postNetworkError(NetworkError networkError) {
-        // #TODO add implementation on the remote server.
-        return false;
-        /*
+    public boolean postNetworkError(final NetworkError networkError) {
         final String endpoint = new NetworkPath(super.containerPath)
-                .buildNetworkErrorEndpoint("single");
+            .buildNetworksEndpoint(super.hostName);
         return super.postToEndpoint(endpoint, networkError);
-        */
     }
 
     /**
@@ -38,7 +33,7 @@ public class NetworkClient extends AbstractClient {
      */
     public boolean postNetworkErrors(final List<NetworkError> networkErrors) {
         final String endpoint = new NetworkPath(super.containerPath)
-                .buildNetworksEndpoint();
+            .buildNetworkErrorBatchEndpoint(super.hostName);
         return super.postToEndpoint(endpoint, networkErrors);
     }
 }

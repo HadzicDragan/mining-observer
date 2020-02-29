@@ -7,7 +7,9 @@ import com.ad.miningobserver.client.ClientPath;
  */
 public class NetworkPath extends ClientPath {
     
+    private static final String NETWORK_ROOT_PATH = "/workers";
     private static final String NETWORK_ERROR = "/networks";
+    private static final String NETWORK_BATCH = "/batch";
 
     public NetworkPath(String hostName) {
         super(hostName);
@@ -18,11 +20,20 @@ public class NetworkPath extends ClientPath {
      * 
      * @return constructed URL endpoint
      */
-    public String buildNetworksEndpoint() {
-        return super.pathBuilder(NETWORK_ERROR);
+    public String buildNetworksEndpoint(final String workerName) {
+        return super.pathBuilder(
+            NETWORK_ROOT_PATH, 
+            ClientPath.PATH_SEPARATOR, 
+            workerName, 
+            NETWORK_ERROR);
     }
 
-    public String buildNetworkErrorEndpoint(final String error) {
-        return super.pathBuilder(NETWORK_ERROR, error);
+    public String buildNetworkErrorBatchEndpoint(final String workerName) {
+        return super.pathBuilder(
+            NETWORK_ROOT_PATH, 
+            ClientPath.PATH_SEPARATOR, 
+            workerName, 
+            NETWORK_ERROR, 
+            NETWORK_BATCH);
     }
 }

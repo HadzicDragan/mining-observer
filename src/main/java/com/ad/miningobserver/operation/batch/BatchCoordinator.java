@@ -23,7 +23,7 @@ public class BatchCoordinator implements EventDesignator<Connection> {
     @Override
     @EventListener(value = {Connection.class})
     public void handleEvent(Connection connection) {
-        if (connection.isConnected() && attemptCount.get() == 5) {
+        if (connection.isConnected() && attemptCount.get() > 4) {
             this.batchOperation.runAsync();
             this.attemptCount.set(0);
             return;

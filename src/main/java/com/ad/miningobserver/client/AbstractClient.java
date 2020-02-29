@@ -1,5 +1,6 @@
 package com.ad.miningobserver.client;
 
+import com.ad.miningobserver.network.NetworkConnection;
 import com.ad.miningobserver.network.RemoteServerStatus;
 import com.ad.miningobserver.network.control.LocalNetwork;
 
@@ -9,11 +10,14 @@ import com.ad.miningobserver.exception.ExceptionOperationHandler;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -27,13 +31,16 @@ public abstract class AbstractClient<T> {
      * Remote server URL and PORT number, value from application.properties 
      */
     protected String containerPath;
-    protected String hostName;
 
     /**
-     * Is REST endpoint enabled for the application, value from application.properties 
+     * Worker name which is recognized by the remote server. 
      */
-    protected boolean isRestEnabled;
+    protected String hostName;
     protected RestTemplate restTemplate;
+    /**
+     * Spring Event publisher, used to notify if the remote connection to the server is down.
+     */
+    private ApplicationEventPublisher eventPublisher;
 
     /**
      * Reference to {@link RemoteServerStatus} which tell the clients if the remote server is
@@ -50,6 +57,10 @@ public abstract class AbstractClient<T> {
         return !this.serverStatus.isServerAvailable();
     }
 
+    /**
+     * Saves the local network hostname, which is used for recognizing who is the client
+     * on the remote server
+     */
     @PostConstruct
     private void initHostName() {
         this.hostName = LocalNetwork.getHostName();
@@ -65,7 +76,7 @@ public abstract class AbstractClient<T> {
      */
     protected ResponseEntity<Object> postObjectToUrl(final String endpoint, final Object body) 
             throws RestClientException {
-        if (this.isRestDisabled()) {
+        if (this.notAvailableServer()) {
             return null;
         }
 
@@ -75,7 +86,36 @@ public abstract class AbstractClient<T> {
                 HttpMethod.POST, 
                 new HttpEntity(body, buildHeaders()), 
                 Object.class);
-        } catch (RestClientException ex) {
+        } catch (Exception ex) {
+            return this.delegateException(ex, endpoint);
+        }
+    }
+
+    /**
+     * Check if the status code is valid (in this case {@code HttpStatus.FORBIDEN}), any
+     * other {@link HttpStatus} aside from OK will be treated as invalid. In case of
+     * {@link ResourceAccessException} event will be fired to notify the application to
+     * close all the connections towards the remote server.
+     * 
+     * @param ex that will be check for specific types
+     * @param endpoint representing the remote enpoint for this method call
+     * @return {@code HttpStatus.OK} if the {@link Exception} is of type 
+     * {@link HttpStatusCodeException} and the status code is {@code FORBIDEN},
+     * else return null
+     */
+    private ResponseEntity delegateException(final Exception ex, final String endpoint) {
+        if (ex instanceof HttpStatusCodeException) {
+            HttpStatusCodeException statusCodeEx = (HttpStatusCodeException) ex;
+            if (HttpStatus.LOCKED.equals(statusCodeEx.getStatusCode())) {
+                return ResponseEntity.ok().build();
+            }
+            ExceptionOperationHandler.registerExceptionOperation(
+                    this.getClass(), statusCodeEx, "postObjectToUrl()", endpoint);
+            return null;
+        } else if (ex instanceof ResourceAccessException) {
+            this.eventPublisher.publishEvent(new NetworkConnection(false));
+            return null;
+        } else {
             ExceptionOperationHandler.registerExceptionOperation(
                     this.getClass(), ex, "postObjectToUrl()", endpoint);
             return null;
@@ -104,11 +144,6 @@ public abstract class AbstractClient<T> {
      */
     protected ResponseEntity<?> getObjectFromUrl(final String endpoint, Class<?> clazz) 
             throws RestClientException {
-        // remove when finished testing
-        // if (this.isRestDisabled()) {
-        //     return null;
-        // }
-
         try {
             return this.restTemplate.exchange(
                 endpoint, 
@@ -130,14 +165,17 @@ public abstract class AbstractClient<T> {
      * or {@link HttpStatus} is OK, else return false
      */
     protected boolean isOkResponseStatus(final ResponseEntity response) {
-        return (response == null) ? false : response.getStatusCode().equals(HttpStatus.OK);
+        return (response == null) ? false : this.isValidResponse(response);
     }
 
     /**
-     * @return {@code boolean} true if REST is disabled via configuration file else false
+     * Helper method to compare the {@code ResponseEntity} status code
+     * is valid {@code HttpStatus.OK}.
+     * @param response
+     * @return {@code boolean} true if the {@code HttpStatus} is OK, else return false
      */
-    private boolean isRestDisabled() {
-        return (!this.isRestEnabled);
+    private boolean isValidResponse(final ResponseEntity response) {
+        return response.getStatusCode().equals(HttpStatus.OK);
     }
 
     /**
@@ -150,12 +188,6 @@ public abstract class AbstractClient<T> {
         headers.add("auth", this.hostName);
 
         return headers;
-    }
-    
-    @Autowired
-    protected final void setIsRestEnabled(@Value(value = "${rest.connector.enabled}") 
-            boolean isRestEnabled) {
-        this.isRestEnabled = isRestEnabled;
     }
 
     @Autowired
@@ -172,5 +204,10 @@ public abstract class AbstractClient<T> {
     @Autowired
     protected final void setRestTemplate(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
+    }
+
+    @Autowired
+    protected final void setEventPublisher(ApplicationEventPublisher publisher) {
+        this.eventPublisher = publisher;
     }
 }

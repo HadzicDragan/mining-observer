@@ -1,6 +1,9 @@
 package com.ad.miningobserver.gpu.entity;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
+
+import com.ad.miningobserver.util.CurrentTime;
 
 /**
  * 
@@ -15,14 +18,17 @@ public class GpuCard {
     private String biosVersion;
     private int fanSpeed;
     private int temperature;
+    private LocalDateTime currentTimeDate;
 
     public GpuCard() {
+        this.currentTimeDate = CurrentTime.currentTimeUTC();
     }
 
     public GpuCard(int index, String uuid, String biosVersion) {
         this.index = index;
         this.uuid = uuid;
         this.biosVersion = biosVersion;
+        this.currentTimeDate = CurrentTime.currentTimeUTC();
     }
     
     @Override
@@ -85,6 +91,9 @@ public class GpuCard {
         this.temperature = temperature;
     }
 
+    public LocalDateTime getCurrentTimeDate() {
+        return this.currentTimeDate;
+    }
 
     @Override
     public String toString() {
@@ -100,7 +109,10 @@ public class GpuCard {
                 .append(SEPARATOR)
                 .append("temp=")
                 .append(this.temperature)
-                .append(PERCENT_SIGN);
+                .append(PERCENT_SIGN)
+                .append(SEPARATOR)
+                .append("currentTime=")
+                .append(this.currentTimeDate);
         
         return builder.toString();
     }

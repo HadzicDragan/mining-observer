@@ -5,6 +5,7 @@ import com.ad.miningobserver.PathLocation;
 public abstract class ClientPath {
     
     protected final String hostName;
+    public static final String PATH_SEPARATOR = "/";
 
     public ClientPath(String hostName) {
         this.hostName = hostName;

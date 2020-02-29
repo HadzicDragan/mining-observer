@@ -9,19 +9,19 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class GpuErrorStream extends GpuCurrentTime {
     
-    private final List<String> errorList;
+    private final List<String> errors;
     private final List<String> uncommonErrors;
 
     public GpuErrorStream(
-        @JsonProperty("errors") List<String> errorList, 
+        @JsonProperty("errors") List<String> errors, 
         @JsonProperty("uncommonErrors") List<String> uncommmonErrors) {
         super();
-        this.errorList = errorList;
+        this.errors = errors;
         this.uncommonErrors = uncommmonErrors;
     }
 
-    public List<String> getErrorList() {
-        return errorList;
+    public List<String> getErrors() {
+        return errors;
     }
 
     public List<String> getUncommonErrors() {

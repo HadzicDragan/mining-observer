@@ -25,4 +25,8 @@ public class ApplicationLogger {
     public static Logger errorLogger() {
         return LogManager.getLogger(ApplicationLogger.class);
     }
+
+    public static void saveError(final Throwable ex) {
+        ApplicationLogger.errorLogger().error(ex.getLocalizedMessage(), ex);
+    }
 }
