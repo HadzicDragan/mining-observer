@@ -5,5 +5,7 @@
 before_commit.sh
 env_vars.sh
 target/*
+logs/*
 docs*
-
+environment/default-application.properties
+environment/application.properties
