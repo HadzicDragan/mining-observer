@@ -4,6 +4,7 @@ import com.ad.miningobserver.file.Creator;
 import com.ad.miningobserver.file.Finder;
 import com.ad.miningobserver.file.Finder.ApplicationFile;
 import com.ad.miningobserver.file.Writer;
+import com.ad.miningobserver.network.control.LocalNetwork;
 import com.ad.miningobserver.util.ApplicationProcessHolder;
 import java.io.File;
 import java.io.IOException;
@@ -49,6 +50,8 @@ public class BootInitiator {
         Creator.createFile(applicatioPIDFile, applicatioPIDFile);
         
         this.fileFinder.canReadMandatoryFiles();
+
+        this.outputHostnameToConsole(LocalNetwork.getHostName());
     }
     
     private void createdIfMissingDirectories(final String startPath) throws IOException {
@@ -62,5 +65,14 @@ public class BootInitiator {
                     .toString();
             Creator.createApplicationDiretory(startPath, folder);
         }
+    }
+
+    private void outputHostnameToConsole(final String hostname) {
+        System.out.println("######################################");
+        System.out.println("######################################");
+        System.out.println("Below is the hostname used to indentify the worker:");
+        System.out.println(hostname);
+        System.out.println("######################################");
+        System.out.println("######################################");
     }
 }
