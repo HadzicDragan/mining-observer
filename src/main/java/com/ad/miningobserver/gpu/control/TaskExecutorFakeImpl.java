@@ -24,7 +24,7 @@ public class TaskExecutorFakeImpl {
     private FakeCommand commandLine;
     @Autowired
     private FakeCommandError commandLineError;
-    
+
     public void executeCommand(String[] commandArgs) {
         if (this.internalCounter.get() == THROW_ERROR_CAP) {
             this.internalCounter.set(INICIAL_VALUE);

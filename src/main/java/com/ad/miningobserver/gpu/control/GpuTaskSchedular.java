@@ -4,6 +4,7 @@ import com.ad.miningobserver.NameReference;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -17,13 +18,19 @@ public class GpuTaskSchedular implements SchedulingConfigurer {
     
     private static final int QUERY_TIME = 10 * 1000; // 10sec
     private static final int DELAY_TIME = 5 * 1000; // 5sec
+    private static final String DEV_ENV = "DEV";
 
-    private final TaskExecutorFakeImpl taskExecutor;
+    private final TaskExecutor taskExecutor;
+    private final TaskExecutorFakeImpl fakeTaskExecutor;
     private final GpuQueryTask gpuQueryTask;
 
+    @Value(value = "${server.production.build}")
+    private String envBuild;
+
     @Autowired
-    public GpuTaskSchedular(TaskExecutorFakeImpl taskExecutor) {
+    public GpuTaskSchedular(TaskExecutor taskExecutor, TaskExecutorFakeImpl taskExecutorFake) {
         this.taskExecutor = taskExecutor;
+        this.fakeTaskExecutor = taskExecutorFake;
         this.gpuQueryTask = new GpuQueryTask();
     }
 
@@ -52,7 +59,11 @@ public class GpuTaskSchedular implements SchedulingConfigurer {
         @Override
         public void run() {
             final String[] queryArgs = new SMICommand().queryMendatoryInfoGPUs();
-            taskExecutor.executeCommand(queryArgs);
+            if (envBuild.equalsIgnoreCase(DEV_ENV)) {
+                taskExecutor.executeCommand(queryArgs);
+            } else {
+                fakeTaskExecutor.executeCommand(queryArgs);
+            }
         }
     }
 }
