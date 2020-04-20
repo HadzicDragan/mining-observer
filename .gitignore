@@ -3,8 +3,6 @@
 .project
 .settings/*
 .idea/*
-before_commit.sh
-env_vars.sh
 target/*
 logs/*
 data/*
