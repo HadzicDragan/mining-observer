@@ -22,18 +22,18 @@ import org.springframework.stereotype.Component;
     NameReference.PROCESS_HANDLER_BEAN
 })
 public class BootInitiator {
-    
+
     private final Finder fileFinder;
     private final ApplicationProcessHolder processManager;
 
     @Autowired
     public BootInitiator(
-            Finder fileFinder, 
+            Finder fileFinder,
             ApplicationProcessHolder processManager) {
         this.fileFinder = fileFinder;
         this.processManager = processManager;
     }
-    
+
     /**
      * Write the application process id to file.
      * File should be located inside the root directory of the application with
@@ -46,14 +46,12 @@ public class BootInitiator {
         String applicatioPIDFile = this.fileFinder
                 .getApplicationFileLocation(ApplicationFile.PID_FILE);
         Writer.writePID(applicatioPIDFile, String.valueOf(this.processManager.getProcessId()));
-        
-        Creator.createFile(applicatioPIDFile, applicatioPIDFile);
-        
-        this.fileFinder.canReadMandatoryFiles();
 
-        this.outputHostnameToConsole(LocalNetwork.getHostName());
+        Creator.createFile(applicatioPIDFile, applicatioPIDFile);
+
+        this.fileFinder.canReadMandatoryFiles();
     }
-    
+
     private void createdIfMissingDirectories(final String startPath) throws IOException {
         final List<String> directories = this.fileFinder.directories();
         for (String directory : directories) {
@@ -65,14 +63,5 @@ public class BootInitiator {
                     .toString();
             Creator.createApplicationDiretory(startPath, folder);
         }
-    }
-
-    private void outputHostnameToConsole(final String hostname) {
-        System.out.println("######################################");
-        System.out.println("######################################");
-        System.out.println("Below is the hostname used to indentify the worker:");
-        System.out.println(hostname);
-        System.out.println("######################################");
-        System.out.println("######################################");
     }
 }
