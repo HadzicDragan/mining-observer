@@ -1,5 +1,6 @@
 package com.ad.miningobserver.client;
 
+import com.ad.miningobserver.EventDesignator;
 import com.ad.miningobserver.network.NetworkConnection;
 import com.ad.miningobserver.network.RemoteServerStatus;
 import com.ad.miningobserver.network.control.LocalNetwork;
@@ -8,9 +9,11 @@ import javax.annotation.PostConstruct;
 
 import com.ad.miningobserver.exception.ExceptionOperationHandler;
 
+import com.ad.miningobserver.state.boundary.StateManager.Status;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -25,7 +28,7 @@ import org.springframework.web.client.RestTemplate;
  * Autowires {@code RestTemplate} and other application.properties values.
  * Additionally this class has helper methods to handle GET and POST client requests.
  */
-public abstract class AbstractClient<T> {
+public abstract class AbstractClient<T> implements EventDesignator<Status> {
     
     /**
      * Remote server URL and PORT number, value from application.properties 
@@ -58,6 +61,13 @@ public abstract class AbstractClient<T> {
     }
 
     /**
+     * If state is not initialized, endpoints will not be enabled.
+     * When the state is initialized all the endpoints will be enabled
+     * and the state endpoints will be closed until the application restarts.
+     */
+    private volatile boolean stateInitialized;
+
+    /**
      * Saves the local network hostname, which is used for recognizing who is the client
      * on the remote server
      */
@@ -65,7 +75,15 @@ public abstract class AbstractClient<T> {
     private void initHostName() {
         this.hostName = LocalNetwork.getHostName();
     }
-    
+
+    @EventListener(value = {Status.class})
+    @Override
+    public void handleEvent(Status obj) {
+        if (Status.ESTABLISHED == obj) {
+            this.stateInitialized = true;
+        }
+    }
+
     /**
      * Submit a POST request to the endpoint parameter.
      * 
@@ -74,18 +92,47 @@ public abstract class AbstractClient<T> {
      * @return {@link ResponseEntity} or null if an exception is thrown
      * @throws RestClientException if the request could not be made for some reason
      */
-    protected ResponseEntity<Object> postObjectToUrl(final String endpoint, final Object body) 
+    protected ResponseEntity<Object> postObjectToUrl(final String endpoint, final Object body)
             throws RestClientException {
-        if (this.notAvailableServer()) {
+        if (this.notAvailableServer() || !this.stateInitialized) {
             return null;
         }
 
+        return this.postCall(endpoint, body);
+    }
+
+    /**
+     * Submit a POST request to the state endpoint parameter.
+     *
+     * @param endpoint to which the request will be made
+     * @param body {@code Object} which will be served as payload for the request
+     * @return {@link ResponseEntity} or null if an exception is thrown
+     * @throws RestClientException if the request could not be made for some reason
+     */
+    protected ResponseEntity<Object> postObjectToUrlState(final String endpoint, final Object body)
+            throws RestClientException {
+        if (this.notAvailableServer() || this.stateInitialized) {
+            return null;
+        }
+
+        return this.postCall(endpoint, body);
+    }
+
+    /**
+     * Plain HTTP POST call to the requested endpoint. If an exception occurs it
+     * will be delegated to the appropriate response.
+     *
+     * @param endpoint to which the request will be made
+     * @param body {@code Object} which will be served as payload for the request
+     * @return {@link ResponseEntity} or null if an exception is thrown
+     */
+    private ResponseEntity<Object> postCall(final String endpoint, final Object body) {
         try {
             return this.restTemplate.exchange(
-                endpoint, 
-                HttpMethod.POST, 
-                new HttpEntity(body, buildHeaders()), 
-                Object.class);
+                    endpoint,
+                    HttpMethod.POST,
+                    new HttpEntity(body, buildHeaders()),
+                    Object.class);
         } catch (Exception ex) {
             return this.delegateException(ex, endpoint);
         }
@@ -131,7 +178,9 @@ public abstract class AbstractClient<T> {
      * @throws RestClientException if the request could not be made for some reason
      */
     protected boolean postToEndpoint(final String endpoint, final Object body) {
-        return this.isOkResponseStatus(this.postObjectToUrl(endpoint, body));
+        return (this.stateInitialized)
+                ? this.isOkResponseStatus(this.postObjectToUrl(endpoint, body))
+                : this.isOkResponseStatus(this.postObjectToUrlState(endpoint, body));
     }
     
     /**

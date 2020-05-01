@@ -25,9 +25,13 @@ public class NameReference {
      * Applies to class {@link ScheduledFile}
      */
     public static final String FILE_CLEANUP_SCHEDULAR_BEAN = "fileCleanupSchedular";
-    
-    
-    
+
+
+
+    /**
+     * ScheduledExecutor that initializes the {@link com.ad.miningobserver.state.boundary.StateManager} on interval.
+     */
+    public static final String EXECUTOR_STATE_SCHEDULAR = "stateTaskSchedularBean";
     /**
      * ScheduledExecutor that queries the underlying GPUs on interval.
      */

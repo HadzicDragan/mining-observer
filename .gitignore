@@ -7,6 +7,6 @@ target/*
 logs/*
 data/*
 docs*
-environment/default-application.properties
 environment/application.properties
+environment/default-application.properties
 Observer.iml
