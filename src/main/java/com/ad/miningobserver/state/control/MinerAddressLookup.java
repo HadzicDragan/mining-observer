@@ -3,6 +3,9 @@ package com.ad.miningobserver.state.control;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+/**
+ * MinerAddressLookup
+ */
 @Component
 public class MinerAddressLookup {
 
@@ -16,13 +19,26 @@ public class MinerAddressLookup {
         return this.minerAddressFileLocation.isBlank();
     }
 
+    /**
+     * Read the minerAddress from application.properties.
+     * If the property file can be found and read that value
+     * will be used, else the default value from
+     * application.properties.
+     *
+     * @return minerAddress from properties file
+     */
     public String getMinerAddress() {
         return (this.minerAddressFileUnavailable())
                 ? this.defaultMinerAddress
                 : this.readFile();
     }
 
-    // TODO add this implementation
+    /**
+     * Should be added in the next release.
+     * TODO add this implementation
+     *
+     * @return minerAddress from the file
+     */
     private String readFile() {
         // should read from this.minerAddressFileLocation
         // when you look it up, save it inside this state
