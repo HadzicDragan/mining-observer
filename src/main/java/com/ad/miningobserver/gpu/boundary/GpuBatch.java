@@ -17,7 +17,7 @@ public class GpuBatch implements Batch {
     @Override
     public void process() {
         this.service.batchGpuThermals();
-        this.service.batchGpuTemperatureStatus();
+        this.service.batchCriticalThermals();
         this.service.batchGpuErrors();
     }
 }

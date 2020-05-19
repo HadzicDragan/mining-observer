@@ -31,9 +31,9 @@ public class GpuClient extends AbstractClient {
         return super.postToEndpoint(endpoint, gpuThermal);
     }
 
-    public boolean batchGpuTemperatures(final List<GpuThermal> gpuThermals) {
+    public boolean batchCriticalThermals(final List<GpuThermal> gpuThermals) {
         final String endpoint = new GpuPath(super.containerPath)
-            .buildGpuThermalsCriticalBatchEndpoint();
+            .buildGpuThermalsCriticalBatchEndpoint(super.hostName);
         return super.postToEndpoint(endpoint, gpuThermals);
     }
 

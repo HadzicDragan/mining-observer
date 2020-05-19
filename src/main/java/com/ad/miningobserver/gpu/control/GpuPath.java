@@ -21,7 +21,8 @@ public class GpuPath extends ClientPath {
             WORKERS_PATH, 
             ClientPath.PATH_SEPARATOR, 
             workerName, 
-            GPUS_PATH);
+            GPUS_PATH
+        );
     }
 
     public String buildGpuThermalsEndpoint(final String workerName) {
@@ -30,16 +31,17 @@ public class GpuPath extends ClientPath {
             WORKERS_PATH, 
             ClientPath.PATH_SEPARATOR, 
             workerName, 
-            THERMALS_PATH);
+            THERMALS_PATH
+        );
     }
-
 
     public String buildGpuErrorEndpoint(final String workerName) {
         return super.pathBuilder(
             WORKERS_PATH, 
             ClientPath.PATH_SEPARATOR,
             workerName, 
-            GPU_ERRORS);
+            GPU_ERRORS
+        );
     }
     
     public String buildGpuErrorBatchEndpoint(final String workerName) {
@@ -48,21 +50,26 @@ public class GpuPath extends ClientPath {
             ClientPath.PATH_SEPARATOR,
             workerName,
             GPU_ERRORS,
-            BATCH_JOB);
+            BATCH_JOB
+        );
     }
 
     public String buildGpuCriticalThermal() {
         return super.pathBuilder(
             GPUS_PATH, 
             GPU_TEMPERATURES, 
-            GPU_CRITICAL);
+            GPU_CRITICAL
+        );
     }
 
-    public String buildGpuThermalsCriticalBatchEndpoint() {
+    public String buildGpuThermalsCriticalBatchEndpoint(final String workerName) {
         return super.pathBuilder(
-            GPUS_PATH, 
+            GPUS_PATH,
+            ClientPath.PATH_SEPARATOR,
+            workerName,
             GPU_TEMPERATURES, 
             GPU_CRITICAL, 
-            BATCH_JOB);
+            BATCH_JOB
+        );
     }
 }

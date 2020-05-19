@@ -49,7 +49,7 @@ public class GpuService {
      */
     public void publishGpuCards(final List<GpuCard> gpuCards) {
         if (this.gpuState.areGpuUuidsPersisted()) {
-            this.pushGpuCardsStatus(gpuCards);
+            this.publishGpuCardsThermals(gpuCards);
             return;
         }
 
@@ -60,15 +60,14 @@ public class GpuService {
             return;
         }
         this.gpuState.gpuUuidsPersisted();
-        this.pushGpuCardsStatus(gpuCards);
+        this.publishGpuCardsThermals(gpuCards);
     }
     
     /**
      * POST {@code GpuThermal} to the remote server.
      * 
-     * @param fileUUID file name without the extension
      */
-    public void pushGpuCardsStatus(final List<GpuCard> gpuCards) {
+    public void publishGpuCardsThermals(final List<GpuCard> gpuCards) {
         final List<GpuThermal> gpuThermals = collectGpuThermals(gpuCards);
         final boolean isPosted = this.client.postGpuThermals(gpuThermals);
         if (!isPosted) {
@@ -96,22 +95,9 @@ public class GpuService {
         }
     }
 
-    /**
-     * Batch POST the gpu errors to the remote server;
-     */
-    public void batchGpuErrors() {
-        final FileAndObjectReference<GpuErrorStream> fileReference = 
-            this.jsonCreator.readGpuErrorStreamFiles();
-        if (fileReference.getObjects().isEmpty()) {
-            return;
-        }
-
-        final boolean isBatchPosted = this.client.batchErrorStream(fileReference.getObjects());
-        this.cleanupAfterBatchProcess(isBatchPosted, fileReference.getFiles());
-    }
 
     /**
-     * POST {@code GpuThermal} to remote server. 
+     * POST {@code GpuThermal} to remote server.
      * If the request was unsuccessful, email the owner that an error has occurred.
      */
     public void publishCriticalTemperature(final String fileUUID) {
@@ -125,6 +111,20 @@ public class GpuService {
             // #TODO send mail because not able to post to remote server.
 //          this.mailService.sendMail();
         }
+    }
+
+    /**
+     * Batch POST the gpu errors to the remote server;
+     */
+    public void batchGpuErrors() {
+        final FileAndObjectReference<GpuErrorStream> fileReference = 
+            this.jsonCreator.readGpuErrorStreamFiles();
+        if (fileReference.getObjects().isEmpty()) {
+            return;
+        }
+
+        final boolean isBatchPosted = this.client.batchErrorStream(fileReference.getObjects());
+        this.cleanupAfterBatchProcess(isBatchPosted, fileReference.getFiles());
     }
 
     /**
@@ -143,21 +143,21 @@ public class GpuService {
             return;
         }
         
-        final boolean isBatchPosted = this.client.batchGpuTemperatures(fileReference.getObjects());
+        final boolean isBatchPosted = this.client.postGpuThermals(fileReference.getObjects());
         this.cleanupAfterBatchProcess(isBatchPosted, fileReference.getFiles());
     }
 
     /**
      * Batch POST the gpu temperature status to remote server;
      */
-    public void batchGpuTemperatureStatus() {
+    public void batchCriticalThermals() {
         final FileAndObjectReference<GpuThermal> fileReference = 
                 this.jsonCreator.readTemperatureFiles();
         if (fileReference.getObjects().isEmpty()) {
             return;
         }
         
-        final boolean isBatchPosted = this.client.batchGpuTemperatures(fileReference.getObjects());
+        final boolean isBatchPosted = this.client.batchCriticalThermals(fileReference.getObjects());
         this.cleanupAfterBatchProcess(isBatchPosted, fileReference.getFiles());
     }
     
